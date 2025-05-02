@@ -46,12 +46,12 @@ python -m uvicorn src.main:app --reload --port 8000
 ```
 
 ## ⚙️ Используемые технологии
-*FastAPI — REST API
+-FastAPI — REST API
 
-*Pydantic — валидация данных
+-Pydantic — валидация данных
 
-*g4f — генерация текста через GPT
+-g4f — генерация текста через GPT
 
-*Uvicorn — сервер
+-Uvicorn — сервер
 
-*collections.Counter — подсчёт частоты аспектов
+-collections.Counter — подсчёт частоты аспектов

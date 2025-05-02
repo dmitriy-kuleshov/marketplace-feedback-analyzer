@@ -9,6 +9,7 @@ tokenizer = transformers.AutoTokenizer.from_pretrained(MODEL_NAME)
 model = transformers.AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
 model.eval()
 
+
 def preprocess_text(review):
     parts = []
     if review.get("productValuation"):
@@ -20,6 +21,7 @@ def preprocess_text(review):
     if review["cons"]:
         parts.append(f"Минусы: {review['cons']}")
     return " ".join(parts).strip()
+
 
 def rule_based_boost(text, sentiment, scores):
     text_lower = text.lower()
@@ -57,6 +59,7 @@ def rule_based_boost(text, sentiment, scores):
 
     return sentiment
 
+
 def analyze_sentiment(text):
     tokens = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
     with torch.no_grad():
@@ -88,6 +91,7 @@ def analyze_sentiment(text):
 
     return sentiment, scores
 
+
 def adjust_sentiment_based_on_rating(sentiment, rating):
     if rating in [4, 5]:
         if sentiment == "негатив":
@@ -103,52 +107,58 @@ def adjust_sentiment_based_on_rating(sentiment, rating):
             sentiment = "негатив"
     return sentiment
 
-# Читаем JSON с отзывами
-with open("filtered_data.json", "r", encoding="utf-8") as file:
-    reviews = json.load(file)
 
-results = []
-for i, review in enumerate(reviews, start=1):
-    review["review_number"] = i  # добавляем номер отзыва
+def analyze_reviews_with_sentiment(reviews: list) -> dict:
+    results = []
+    for i, review in enumerate(reviews, start=1):
+        review["review_number"] = i
+        full_text = preprocess_text(review)
+        rating = review.get("productValuation", 3)
 
-    full_text = preprocess_text(review)
-    rating = review.get("productValuation", 3)
+        if full_text:
+            sentiment, scores = analyze_sentiment(full_text)
+            original_sentiment = sentiment
+            sentiment = rule_based_boost(full_text, sentiment, scores)
+            sentiment = adjust_sentiment_based_on_rating(sentiment, rating)
+            review["sentiment"] = sentiment
+            review[
+                "rule_based_override"] = f"{original_sentiment} → {sentiment}" if sentiment != original_sentiment else None
 
-    if full_text:
-        sentiment, scores = analyze_sentiment(full_text)
-        original_sentiment = sentiment
-        sentiment = rule_based_boost(full_text, sentiment, scores)
-        sentiment = adjust_sentiment_based_on_rating(sentiment, rating)
-
-        review["sentiment"] = sentiment
-        review["rule_based_override"] = f"{original_sentiment} → {sentiment}" if sentiment != original_sentiment else None
-
-        num_labels = len(scores)
-        if num_labels == 2:
-            review["sentiment_scores"] = {
-                "негатив": round(scores[0].item(), 3),
-                "позитив": round(scores[1].item(), 3),
-            }
+            if len(scores) == 2:
+                review["sentiment_scores"] = {
+                    "негатив": round(scores[0].item(), 3),
+                    "позитив": round(scores[1].item(), 3),
+                }
+            else:
+                review["sentiment_scores"] = {
+                    "негатив": round(scores[0].item(), 3),
+                    "нейтральный": round(scores[1].item(), 3),
+                    "позитив": round(scores[2].item(), 3),
+                }
         else:
-            review["sentiment_scores"] = {
-                "негатив": round(scores[0].item(), 3),
-                "нейтральный": round(scores[1].item(), 3),
-                "позитив": round(scores[2].item(), 3),
-            }
-    else:
-        review["sentiment"] = "не определено"
-        review["sentiment_scores"] = None
+            review["sentiment"] = "не определено"
+            review["sentiment_scores"] = None
 
-    # Переставляем review_number в начало
-    ordered_review = {
-        "review_number": review["review_number"],
-        **{k: v for k, v in review.items() if k != "review_number"}
-    }
+        ordered_review = {
+            "review_number": review["review_number"],
+            **{k: v for k, v in review.items() if k != "review_number"}
+        }
+        results.append(ordered_review)
+    return {"reviews": results}
 
-    results.append(ordered_review)
 
-# Сохраняем результаты
-with open("reviews_with_sentiment.json", "w", encoding="utf-8") as file:
-    json.dump(results, file, ensure_ascii=False, indent=4)
-
-print("Анализ тональности завершен! Результаты сохранены в reviews_with_sentiment.json")
+# if __name__ == "__main__":
+#     import json
+#
+#     # Читаем отфильтрованные отзывы
+#     with open("filtered_data.json", "r", encoding="utf-8") as file:
+#         reviews = json.load(file)
+#
+#     # Анализируем тональность
+#     result = analyze_reviews_with_sentiment(reviews)
+#
+#     # Сохраняем результат
+#     with open("reviews_with_sentiment.json", "w", encoding="utf-8") as file:
+#         json.dump(result["reviews"], file, ensure_ascii=False, indent=4)
+#
+#     print("Анализ тональности завершен! Результаты сохранены в reviews_with_sentiment.json")

@@ -55,3 +55,9 @@ python -m uvicorn src.main:app --reload --port 8000
 * Uvicorn — сервер
 
 * collections.Counter — подсчёт частоты аспектов
+
+## 👨‍💻 Разработчики
+
+- **Бэкенд**: [dmitriy-kuleshov](https://github.com/dmitriy-kuleshov)
+- **Фронтенд**: [MaximLuc](https://github.com/MaximLuc)
+

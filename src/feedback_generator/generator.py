@@ -70,19 +70,3 @@ def generate_summary(aspects_results):
         "Сводный отзыв": response.choices[0].message.content,
         "Ключевые наблюдения": insights
     }
-
-# if __name__ == "__main__":
-#     # Загружаем данные из файлов
-#     with open("../feedback_analyzer/positive_reviews.json", "r", encoding="utf-8") as f_pos, \
-#          open("../feedback_analyzer/negative_reviews.json", "r", encoding="utf-8") as f_neg:
-#         positive_data = json.load(f_pos)
-#         negative_data = json.load(f_neg)
-#
-#     # Генерация итогового отзыва
-#     final_output = generate_summary(positive_data + negative_data)
-#
-#     # Сохраняем результат
-#     with open("aggregated_review_summary.json", "w", encoding="utf-8") as f_out:
-#         json.dump(final_output, f_out, ensure_ascii=False, indent=2)
-#
-#     print("✅ Итог сохранён в aggregated_review_summary.json")

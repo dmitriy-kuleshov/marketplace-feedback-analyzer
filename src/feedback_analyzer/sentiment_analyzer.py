@@ -145,20 +145,3 @@ def analyze_reviews_with_sentiment(reviews: list) -> dict:
         }
         results.append(ordered_review)
     return {"reviews": results}
-
-
-# if __name__ == "__main__":
-#     import json
-#
-#     # Читаем отфильтрованные отзывы
-#     with open("filtered_data.json", "r", encoding="utf-8") as file:
-#         reviews = json.load(file)
-#
-#     # Анализируем тональность
-#     result = analyze_reviews_with_sentiment(reviews)
-#
-#     # Сохраняем результат
-#     with open("reviews_with_sentiment.json", "w", encoding="utf-8") as file:
-#         json.dump(result["reviews"], file, ensure_ascii=False, indent=4)
-#
-#     print("Анализ тональности завершен! Результаты сохранены в reviews_with_sentiment.json")
